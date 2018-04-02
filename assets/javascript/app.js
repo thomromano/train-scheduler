@@ -46,6 +46,8 @@ console.log(newTrain.train);
     console.log(newTrain.trainTime);
     console.log(newTrain.frequency);
 
+    //Alert
+    alert("New Train successfully added");
 
 //Clear textboxes
     $("#trainName").val("");
