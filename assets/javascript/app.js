@@ -1,68 +1,67 @@
 "use strict"
 
-//Initialize firebase
-var config = {
-    apiKey: "AIzaSyBf-RRTMGdxJNWguY0KlSg09SFQm-IMyMY",
-    authDomain: "thomproject-e6ae1.firebaseapp.com",
-    databaseURL: "https://thomproject-e6ae1.firebaseio.com",
-    projectId: "thomproject-e6ae1",
-    storageBucket: "thomproject-e6ae1.appspot.com",
-    messagingSenderId: "631388206573"
-};
-
-firebase.initializeApp(config);
-
-const database = firebase.database();
+$(document).ready(function () {
 
 
-//Button to add new trains
-$("#add-train-button").on("click", function (e) {
-    e.preventDefault();
-
-    //grab user input
-    let train = $("#train-name-input").val().trim();
-    let line = $("#line-input").val().trim();
-    let destination = $("#destination-input").val().trim();
-    let trainTime = moment($("#time-input").val().trim(), "HH:mm");
-    let frequency = $("#frequency-input").val().trim();
-
-    
-//create local object for holding train data
-    let newTrain = {
-        name: train,
-        line: line,
-        destination: destination,
-        trainTime: trainTime,
-        frequency: frequency,
+    // Initialize firebase
+    let config = {
+        apiKey: "AIzaSyBf-RRTMGdxJNWguY0KlSg09SFQm-IMyMY",
+        authDomain: "thomproject-e6ae1.firebaseapp.com",
+        databaseURL: "https://thomproject-e6ae1.firebaseio.com",
+        projectId: "thomproject-e6ae1",
+        storageBucket: "thomproject-e6ae1.appspot.com",
+        messagingSenderId: "631388206573"
     };
 
-    //upload train data to database
+    firebase.initializeApp(config);
+
+    let database = firebase.database();
+
+      // Button to add train
+  $("#addTrainBtn").on("click", function () {
+
+    // Grab user input and assign to variables
+    const trainName = $("#trainNameInput").val().trim();
+    const destination = $("#destinationInput").val().trim();
+    let trainTimeInput = moment($("#trainTimeInput").val().trim(), "HH:mm").subtract(10, "years").format("X");;
+    const frequencyInput = $("#frequencyInput").val().trim();
+
+    let newTrain = {
+      name: trainName,
+      destination: destination,
+      trainTime: trainTimeInput,
+      frequency: frequencyInput,
+    }
+
+    // push to Firebase
     database.ref().push(newTrain);
+    
+    // clear textboxes
+    $("#trainNameInput").val("");
+    $("#destinationInput").val("");
+    $("#frequencyInput").val("");
+    $("#trainTimeInput").val("");
 
-    //log to console
-console.log(newTrain.train);
-    console.log(newTrain.line);
-    console.log(newTrain.destination);
-    console.log(newTrain.trainTime);
-    console.log(newTrain.frequency);
+    // Prevent page from refreshing
+    return false;
+  });
 
-    //Alert
-    alert("New Train successfully added");
+  database.ref().on("child_added", function (childSnapshot, prevChildKey) {
 
-//Clear textboxes
-    $("#trainName").val("");
-    $("#line").val("");
-    $("#destination").val("");
-    $("#trainTime").val("");
-    $("#frequency").val("");
+    // assign firebase variables to snapshots
+    let firebaseName = childSnapshot.val().name;
+    let firebaseDestination = childSnapshot.val().destination;
+    let firebaseTrainTimeInput = childSnapshot.val().trainTime;
+    let firebaseFrequency = childSnapshot.val().frequency;
 
+    let diffTime = moment().diff(moment.unix(firebaseTrainTimeInput), "minutes");
+    let timeRemainder = moment().diff(moment.unix(firebaseTrainTimeInput), "minutes") % firebaseFrequency;
+    let minutes = firebaseFrequency - timeRemainder;
+
+    let nextTrainArrival = moment().add(minutes, "m").format("hh:mm A");
+
+    // Append train info 
+    $("#trainTable > tbody").append(`<tr><td> ${firebaseName} </td><td>  ${firebaseDestination}  </td><td>  ${firebaseFrequency}    </td><td>  ${nextTrainArrival}  </td><td>  ${minutes}  </td></tr>`);
+  });
+       
 });
-
-//Creates firebase event for adding train to database and a row in html
-database.ref().on("child_added", function(childSnapshot, prevChildKey) {
-
-    console.log(childSnapshot.val());
-
-    //Store everything into a variable 
-
-})
